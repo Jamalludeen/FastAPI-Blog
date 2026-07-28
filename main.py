@@ -3,7 +3,7 @@ from fastapi import FastAPI
 
 app = FastAPI()
 
-posts = [
+posts: list[dict] = [
     {
         "id": 1,
         "author": "James Bond",

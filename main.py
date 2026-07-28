@@ -22,3 +22,9 @@ posts = [
 @app.get("/")
 def home():
     return {"message": "Hello World!"}
+
+
+@app.get("/api/posts")
+def get_posts():
+    return posts
+

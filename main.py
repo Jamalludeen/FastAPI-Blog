@@ -31,7 +31,7 @@ def home(request: Request):
     return templates.TemplateResponse(request, "home.html", {"posts": posts, "title": "Project"})
 
 @app.get("/posts/{post_id}", include_in_schema=False)
-def get_post(request: Request, post_id: int):
+def post_page(request: Request, post_id: int):
     for post in posts:
         if post.get("id") == post_id:
             title = post['title'][:50]

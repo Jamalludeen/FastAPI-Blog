@@ -1,7 +1,8 @@
-from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
-from sqlalchemy import Mapped, mapped_column, relationship
 from __future__ import annotations
-from datetime import UTC, datetime
+from datetime import datetime, timezone
+
+from sqlalchemy import DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy.orm import mapped_column, relationship, Mapped
 
 from database import Base
 
@@ -42,7 +43,7 @@ class Post(Base):
 
     date_posted: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(UTC),
+        default=lambda: datetime.now(timezone.utc)
     )
 
     author: Mapped[User] = relationship(back_populates="posts")

@@ -86,42 +86,45 @@ def user_posts_page(
     )
 
 
-@app.post("/api/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@app.post(
+    "/api/users",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED,
+)
 def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
-    # check if the username is taken
-    result = db.execute(select(models.User).where(models.User.username == user.username))
+    result = db.execute(
+        select(models.User).where(models.User.username == user.username),
+    )
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already exists",
+        )
+    result = db.execute(
+        select(models.User).where(models.User.email == user.email),
+    )
     existing_email = result.scalars().first()
-
     if existing_email:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Username already exists"
-            )
-
-    # check if the email is taken
-    result = db.execute(select(models.User).where(models.User.email == user.email))
-    existing_email = result.scalars().first()
-    
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, 
-            detail="Email already exists"
-            )
-
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered",
+        )
     new_user = models.User(
         username=user.username,
-        email=user.email
+        email=user.email,
     )
-
     db.add(new_user)
     db.commit()
-    db.refresh(new_user)  
+    db.refresh(new_user)
+    return new_user
+
     
 
 @app.post("/api/users/{user_id}", response_model=UserResponse)
 def get_user(user_id: int, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(
-        select(models.User).where(models.user.id == user_id)
+        select(models.User).where(models.User.id == user_id)
     )
     user = result.scalars().first()
 
@@ -168,7 +171,7 @@ def create_post(post: PostCreate, db: Annotated[Session, Depends(get_db)]):
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found",
+            detail="User does not found",
         )
 
     new_post = models.Post(

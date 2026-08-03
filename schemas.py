@@ -17,7 +17,6 @@ class UserResponse(UserBase):
 
     id: int
     image_file: str | None
-    iamge: str
 
 
 class PostBase(BaseModel):

@@ -1,16 +1,30 @@
 from starlette.exceptions import HTTPException as StartletteHttpException
-from fastapi import FastAPI, Request, HTTPException, status
+from fastapi import FastAPI, Request, HTTPException, status, Depends
 from fastapi.exceptions import RequestValidationError
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 
-from schemas import PostCreate, PostResponse
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
+from schemas import PostCreate, PostResponse, UserResponse, UserCreate
+
+from typing import Annotated
+
+from database import Base, engine, get_db
+import models
+
+
+
+Base.metadata.create_all(bind=engine)
 
 
 app = FastAPI()
 # /static is the url, and second parameter is the instance of StatifFiles that points to the static files directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.mount("/media", StaticFiles(directory="media"), name="media")
 
 templates = Jinja2Templates(directory="templates")
 
@@ -46,6 +60,39 @@ def post_page(request: Request, post_id: int):
             return templates.TemplateResponse(request, "post.html", {"post": post, "title": title})
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
+
+
+@app.post("/api/users", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+def create_user(user: UserCreate, db: Annotated[Session, Depends(get_db)]):
+    # check if the username is taken
+    result = db.execute(select(models.User).where(models.User.username == user.username))
+    existing_email = result.scalars().first()
+
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Username already exists"
+            )
+
+    # check if the email is taken
+    result = db.execute(select(models.User).where(models.User.email == user.email))
+    existing_email = result.scalars().first()
+    
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="Email already exists"
+            )
+
+    new_user = models.User(
+        username=user.username,
+        email=user.email
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)  
+    
 
 @app.get("/api/posts", response_model=list[PostResponse])
 def get_posts():

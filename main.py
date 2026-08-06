@@ -196,7 +196,7 @@ def get_post(post_id: int, db: Annotated[Session, Depends(get_db)]):
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
 
-@app.put("/api/posts/{post_id}", response_class=PostResponse)
+@app.put("/api/posts/{post_id}", response_model=PostResponse)
 def update_post_full(post_id: int, post_data: PostCreate, db: Annotated[Session, Depends(get_db)]):
     result = db.execute(select(models.Post).where(models.Post.id == post_id))
     post = result.scalars().first()

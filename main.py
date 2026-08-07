@@ -220,7 +220,7 @@ def update_post_full(post_id: int, post_data: PostCreate, db: Annotated[Session,
     post.user_id = post_data.user_id
 
     db.commit()
-    db.refresh()
+    db.refresh(post)
     return post
 
 

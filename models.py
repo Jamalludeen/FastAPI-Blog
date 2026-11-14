@@ -28,7 +28,6 @@ class User(Base):
             return f"/media/profile_pics/{self.image_file}"
         return "/static/profile_pics/default.jpg"
 
-
 class Post(Base):
     __tablename__ = "posts"
 
